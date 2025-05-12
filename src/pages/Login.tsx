@@ -27,12 +27,15 @@ export default function Login() {
       setIsLoading(true);
       const { error } = await signIn(email, password);
       
-      if (!error) {
+      if (error) {
+        toast.error(`Erro ao fazer login: ${error.message}`);
+      } else {
         toast.success("Login realizado com sucesso!");
         navigate("/");
       }
     } catch (error) {
       console.error("Login error:", error);
+      toast.error("Ocorreu um erro durante o login. Tente novamente.");
     } finally {
       setIsLoading(false);
     }
