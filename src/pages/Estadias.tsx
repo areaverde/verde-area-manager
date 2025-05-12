@@ -1,37 +1,65 @@
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Bed } from "lucide-react";
+import { StayList } from "@/components/stays/StayList";
+import { StayDialog } from "@/components/stays/StayDialog";
+
+interface Stay {
+  id: string;
+  unit_id: string;
+  guest_id: string;
+  start_date: string;
+  end_date: string | null;
+  monthly_rent: number;
+  status: string;
+}
 
 export default function Estadias() {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
+  const [selectedStay, setSelectedStay] = useState<Stay | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const handleCreateStay = () => {
+    setDialogMode("create");
+    setSelectedStay(null);
+    setDialogOpen(true);
+  };
+
+  const handleEditStay = (stay: Stay) => {
+    setDialogMode("edit");
+    setSelectedStay(stay);
+    setDialogOpen(true);
+  };
+
+  const handleSuccess = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Estadias</h1>
-        <Button className="bg-green-700 hover:bg-green-800">
-          Nova Estadia
+        <Button 
+          className="bg-green-700 hover:bg-green-800"
+          onClick={handleCreateStay}
+        >
+          Registrar Nova Estadia
         </Button>
       </div>
       
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="p-6 flex flex-col">
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="font-semibold text-lg">Carlos Silva</h3>
-              <p className="text-sm text-gray-500">Casa 101</p>
-              <p className="text-sm text-gray-500">Início: 10/05/2025</p>
-            </div>
-            <div className="bg-green-100 p-2 rounded-full">
-              <Bed className="h-5 w-5 text-green-700" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-green-100 text-green-700 border-green-200">
-              Ativa
-            </span>
-          </div>
-        </Card>
-      </div>
+      <StayList 
+        key={refreshTrigger}
+        onEdit={handleEditStay} 
+      />
+
+      <StayDialog
+        open={dialogOpen}
+        mode={dialogMode}
+        initialData={selectedStay}
+        onOpenChange={setDialogOpen}
+        onSuccess={handleSuccess}
+      />
     </div>
   );
 }

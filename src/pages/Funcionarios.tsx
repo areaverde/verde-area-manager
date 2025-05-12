@@ -1,32 +1,67 @@
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { User } from "lucide-react";
+import { EmployeeList } from "@/components/employees/EmployeeList";
+import { EmployeeDialog } from "@/components/employees/EmployeeDialog";
+
+interface Employee {
+  id: string;
+  full_name: string;
+  role: string;
+  phone: string | null;
+  email: string | null;
+  start_date: string;
+  end_date: string | null;
+  salary: number | null;
+  notes: string | null;
+}
 
 export default function Funcionarios() {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const handleCreateEmployee = () => {
+    setDialogMode("create");
+    setSelectedEmployee(null);
+    setDialogOpen(true);
+  };
+
+  const handleEditEmployee = (employee: Employee) => {
+    setDialogMode("edit");
+    setSelectedEmployee(employee);
+    setDialogOpen(true);
+  };
+
+  const handleSuccess = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Funcionários</h1>
-        <Button className="bg-green-700 hover:bg-green-800">
-          Novo Funcionário
+        <Button 
+          className="bg-green-700 hover:bg-green-800"
+          onClick={handleCreateEmployee}
+        >
+          Adicionar Novo Funcionário
         </Button>
       </div>
       
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="p-6 flex flex-col">
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="font-semibold text-lg">Ana Pereira</h3>
-              <p className="text-sm text-gray-500">Gerente</p>
-              <p className="text-sm text-gray-500">(11) 98765-4321</p>
-            </div>
-            <div className="bg-green-100 p-2 rounded-full">
-              <User className="h-5 w-5 text-green-700" />
-            </div>
-          </div>
-        </Card>
-      </div>
+      <EmployeeList 
+        key={refreshTrigger}
+        onEdit={handleEditEmployee}
+      />
+
+      <EmployeeDialog
+        open={dialogOpen}
+        mode={dialogMode}
+        initialData={selectedEmployee}
+        onOpenChange={setDialogOpen}
+        onSuccess={handleSuccess}
+      />
     </div>
   );
 }

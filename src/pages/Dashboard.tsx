@@ -1,8 +1,9 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building, Users, Bed, DollarSign, Wrench, User } from "lucide-react";
+import { Building, Users, Bed, DollarSign, Wrench, User, Calendar, AlertTriangle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { format, addMonths, isAfter, isBefore } from "date-fns";
 
 interface StatCardProps {
   title: string;
@@ -10,11 +11,12 @@ interface StatCardProps {
   description?: string;
   icon: React.ReactNode;
   loading?: boolean;
+  className?: string;
 }
 
-function StatCard({ title, value, description, icon, loading = false }: StatCardProps) {
+function StatCard({ title, value, description, icon, loading = false, className }: StatCardProps) {
   return (
-    <Card>
+    <Card className={className}>
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
         <div className="w-8 h-8 bg-green-100 rounded-md flex items-center justify-center text-green-700">
@@ -37,41 +39,97 @@ function StatCard({ title, value, description, icon, loading = false }: StatCard
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
-    unidades: 0,
-    hospedes: 0,
-    estadias: 0,
-    pagamentos: 0,
-    manutencao: 0,
-    funcionarios: 0,
+    totalUnits: 0,
+    occupiedUnits: 0,
+    availableUnits: 0,
+    upcomingCheckins: 0,
+    upcomingCheckouts: 0,
+    pendingPayments: 0,
+    maintenanceNeeded: 0,
+    totalGuests: 0, 
+    totalEmployees: 0
   });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchStats() {
       try {
+        // Get current date
+        const today = new Date();
+        const inThirtyDays = addMonths(today, 1);
+        const todayStr = format(today, 'yyyy-MM-dd');
+        const inThirtyDaysStr = format(inThirtyDays, 'yyyy-MM-dd');
+        
+        // Fetch various stats in parallel
         const [
-          unidadesResponse,
-          hospedesResponse,
-          estadiasResponse,
-          pagamentosResponse,
-          manutencaoResponse,
-          funcionariosResponse
+          totalUnitsResponse,
+          occupiedUnitsResponse,
+          availableUnitsResponse,
+          upcomingCheckinsResponse,
+          activeStaysResponse,
+          pendingPaymentsResponse,
+          maintenanceResponse,
+          allGuestsResponse,
+          allEmployeesResponse
         ] = await Promise.all([
+          // Total Units
           supabase.from('units').select('*', { count: 'exact', head: true }),
+          
+          // Occupied Units
+          supabase.from('units').select('*', { count: 'exact', head: true })
+            .eq('status', 'occupied'),
+          
+          // Available Units
+          supabase.from('units').select('*', { count: 'exact', head: true })
+            .eq('status', 'available'),
+          
+          // Upcoming Check-ins
+          supabase.from('stays').select('*', { count: 'exact', head: true })
+            .eq('status', 'active')
+            .gt('start_date', todayStr)
+            .lt('start_date', inThirtyDaysStr),
+          
+          // Active Stays (to check for upcoming checkouts)
+          supabase.from('stays').select('id, end_date')
+            .eq('status', 'active')
+            .not('end_date', 'is', null),
+          
+          // Pending Payments
+          supabase.from('payments').select('*', { count: 'exact', head: true })
+            .eq('status', 'pending'),
+          
+          // Maintenance Needed
+          supabase.from('maintenance_logs').select('*', { count: 'exact', head: true })
+            .in('status', ['reported', 'scheduled', 'in_progress']),
+            
+          // Total Guests
           supabase.from('guests').select('*', { count: 'exact', head: true }),
-          supabase.from('stays').select('*', { count: 'exact', head: true }),
-          supabase.from('payments').select('*', { count: 'exact', head: true }),
-          supabase.from('maintenance_logs').select('*', { count: 'exact', head: true }),
-          supabase.from('employees').select('*', { count: 'exact', head: true }),
+          
+          // Total Employees
+          supabase.from('employees').select('*', { count: 'exact', head: true })
+            .is('end_date', null), // Only active employees
         ]);
 
+        // Calculate upcoming checkouts
+        let upcomingCheckouts = 0;
+        if (activeStaysResponse.data) {
+          upcomingCheckouts = activeStaysResponse.data.filter(stay => {
+            if (!stay.end_date) return false;
+            const endDate = new Date(stay.end_date);
+            return isAfter(endDate, today) && isBefore(endDate, inThirtyDays);
+          }).length;
+        }
+
         setStats({
-          unidades: unidadesResponse.count || 0,
-          hospedes: hospedesResponse.count || 0,
-          estadias: estadiasResponse.count || 0,
-          pagamentos: pagamentosResponse.count || 0,
-          manutencao: manutencaoResponse.count || 0,
-          funcionarios: funcionariosResponse.count || 0,
+          totalUnits: totalUnitsResponse.count || 0,
+          occupiedUnits: occupiedUnitsResponse.count || 0,
+          availableUnits: availableUnitsResponse.count || 0,
+          upcomingCheckins: upcomingCheckinsResponse.count || 0,
+          upcomingCheckouts,
+          pendingPayments: pendingPaymentsResponse.count || 0,
+          maintenanceNeeded: maintenanceResponse.count || 0,
+          totalGuests: allGuestsResponse.count || 0,
+          totalEmployees: allEmployeesResponse.count || 0,
         });
       } catch (error) {
         console.error('Error fetching dashboard stats:', error);
@@ -91,41 +149,76 @@ export default function Dashboard() {
       
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <StatCard
-          title="Unidades"
-          value={stats.unidades}
+          title="Unidades Ocupadas"
+          value={`${stats.occupiedUnits} / ${stats.totalUnits}`}
+          description="Total de unidades ocupadas"
           icon={<Building size={18} />}
           loading={loading}
+          className="border-l-4 border-green-500"
+        />
+        <StatCard
+          title="Unidades Disponíveis"
+          value={stats.availableUnits}
+          description="Unidades prontas para ocupação"
+          icon={<Building size={18} />}
+          loading={loading}
+          className="border-l-4 border-blue-500"
+        />
+        <StatCard
+          title="Check-ins Próximos"
+          value={stats.upcomingCheckins}
+          description="Nos próximos 30 dias"
+          icon={<Calendar size={18} />}
+          loading={loading}
+          className="border-l-4 border-purple-500"
+        />
+        <StatCard
+          title="Check-outs Próximos"
+          value={stats.upcomingCheckouts}
+          description="Nos próximos 30 dias"
+          icon={<Calendar size={18} />}
+          loading={loading}
+          className="border-l-4 border-orange-500"
+        />
+        <StatCard
+          title="Pagamentos Pendentes"
+          value={stats.pendingPayments}
+          description="Aguardando confirmação"
+          icon={<DollarSign size={18} />}
+          loading={loading}
+          className="border-l-4 border-yellow-500"
+        />
+        <StatCard
+          title="Manutenções Ativas"
+          value={stats.maintenanceNeeded}
+          description="Reportadas ou em andamento"
+          icon={<AlertTriangle size={18} />}
+          loading={loading}
+          className="border-l-4 border-red-500"
         />
         <StatCard
           title="Hóspedes"
-          value={stats.hospedes}
+          value={stats.totalGuests}
+          description="Total de hóspedes registrados"
           icon={<Users size={18} />}
           loading={loading}
+          className="border-l-4 border-indigo-500"
         />
         <StatCard
-          title="Estadias Ativas"
-          value={stats.estadias}
-          icon={<Bed size={18} />}
-          loading={loading}
-        />
-        <StatCard
-          title="Pagamentos"
-          value={stats.pagamentos}
-          description="Total de pagamentos registrados"
-          icon={<DollarSign size={18} />}
-          loading={loading}
-        />
-        <StatCard
-          title="Manutenções"
-          value={stats.manutencao}
-          icon={<Wrench size={18} />}
-          loading={loading}
-        />
-        <StatCard
-          title="Funcionários"
-          value={stats.funcionarios}
+          title="Funcionários Ativos"
+          value={stats.totalEmployees}
+          description="Equipe atual"
           icon={<User size={18} />}
           loading={loading}
+          className="border-l-4 border-teal-500"
+        />
+        <StatCard
+          title="Taxa de Ocupação"
+          value={`${stats.totalUnits ? Math.round((stats.occupiedUnits / stats.totalUnits) * 100) : 0}%`}
+          description="Porcentagem de unidades ocupadas"
+          icon={<Bed size={18} />}
+          loading={loading}
+          className="border-l-4 border-pink-500"
         />
       </div>
     </div>
