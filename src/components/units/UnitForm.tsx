@@ -98,8 +98,9 @@ export default function UnitForm({ unit, userId, mode, onSuccess }: UnitFormProp
     try {
       setLoading(true);
       
+      // Create a properly typed object with all required fields
       const unitData = {
-        ...data,
+        ...data,  // This spreads all form data (which contains all required fields)
         created_by: userId,
         updated_by: userId,
         updated_at: new Date().toISOString(),
@@ -110,7 +111,7 @@ export default function UnitForm({ unit, userId, mode, onSuccess }: UnitFormProp
       if (mode === 'create') {
         response = await supabase
           .from('units')
-          .insert([unitData])
+          .insert(unitData)
           .select();
       } else if (mode === 'edit' && unit) {
         // For edit, we don't want to override the created_by

@@ -67,8 +67,9 @@ export default function GuestForm({ guest, userId, mode, onSuccess }: GuestFormP
     try {
       setLoading(true);
       
+      // Create a properly typed object with all required fields
       const guestData = {
-        ...data,
+        ...data,  // This spreads all form data (which contains all required fields)
         created_by: userId,
         updated_by: userId,
         updated_at: new Date().toISOString(),
@@ -79,7 +80,7 @@ export default function GuestForm({ guest, userId, mode, onSuccess }: GuestFormP
       if (mode === 'create') {
         response = await supabase
           .from('guests')
-          .insert([guestData])
+          .insert(guestData)
           .select();
       } else if (mode === 'edit' && guest) {
         // For edit, we don't want to override the created_by

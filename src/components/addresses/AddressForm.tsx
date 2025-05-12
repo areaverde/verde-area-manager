@@ -72,8 +72,9 @@ export default function AddressForm({ address, userId, mode, onSuccess }: Addres
     try {
       setLoading(true);
       
+      // Create a properly typed object with all required fields
       const addressData = {
-        ...data,
+        ...data,  // This spreads all form data (which contains all required fields)
         created_by: userId,
         updated_by: userId,
         updated_at: new Date().toISOString(),
@@ -84,10 +85,10 @@ export default function AddressForm({ address, userId, mode, onSuccess }: Addres
       if (mode === 'create') {
         response = await supabase
           .from('addresses')
-          .insert([addressData])
+          .insert(addressData)
           .select();
       } else if (mode === 'edit' && address) {
-        // For edit, we don't want to override the created_by
+        // Ensure we don't override the created_by in edit mode
         const { created_by, ...updateData } = addressData;
         
         response = await supabase
