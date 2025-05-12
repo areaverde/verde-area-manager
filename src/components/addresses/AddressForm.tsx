@@ -89,8 +89,15 @@ export default function AddressForm({ address, userId, mode, onSuccess }: Addres
         if (error) throw error;
       } else if (mode === 'edit' && address) {
         // For edit, don't include created_by to avoid overriding it
+        // Make sure to include all required fields from formData
         const updateData = {
-          ...formData,
+          name: formData.name,
+          street: formData.street,
+          number: formData.number,
+          neighborhood: formData.neighborhood,
+          city: formData.city,
+          state: formData.state,
+          zip_code: formData.zip_code,
           updated_by: userId,
           updated_at: new Date().toISOString(),
         };

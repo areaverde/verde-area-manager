@@ -101,7 +101,10 @@ export default function UnitForm({ unit, userId, mode, onSuccess }: UnitFormProp
       if (mode === 'create') {
         // For create, include all required fields plus metadata
         const unitData = {
-          ...formData, // This ensures all required fields are included
+          unit_number: formData.unit_number,
+          address_id: formData.address_id,
+          description: formData.description,
+          status: formData.status,
           created_by: userId,
           updated_by: userId,
           updated_at: new Date().toISOString(),
@@ -116,7 +119,10 @@ export default function UnitForm({ unit, userId, mode, onSuccess }: UnitFormProp
       } else if (mode === 'edit' && unit) {
         // For edit, don't include created_by to avoid overriding it
         const updateData = {
-          ...formData,
+          unit_number: formData.unit_number,
+          address_id: formData.address_id,
+          description: formData.description,
+          status: formData.status,
           updated_by: userId,
           updated_at: new Date().toISOString(),
         };
