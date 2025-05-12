@@ -15,6 +15,7 @@ import Estadias from "./pages/Estadias";
 import Pagamentos from "./pages/Pagamentos";
 import Manutencao from "./pages/Manutencao";
 import Funcionarios from "./pages/Funcionarios";
+import Addresses from "./pages/Addresses";
 
 const queryClient = new QueryClient();
 
@@ -95,6 +96,14 @@ const AppRoutes = () => {
         <ProtectedRoute>
           <MainLayout>
             <Funcionarios />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/addresses" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <Addresses />
           </MainLayout>
         </ProtectedRoute>
       } />
