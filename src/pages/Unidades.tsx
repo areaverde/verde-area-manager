@@ -1,18 +1,16 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { Plus, Building, Pencil, Eye } from "lucide-react";
+import { Plus } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import UnitForm from "@/components/units/UnitForm";
 import UnitDetails from "@/components/units/UnitDetails";
 import { useAuth } from "@/context/AuthContext";
+import UnitList from "@/components/units/UnitList";
+import UnitEmptyState from "@/components/units/UnitEmptyState";
 
 type Unit = {
   id: string;
@@ -36,7 +34,6 @@ export default function Unidades() {
   const [dialogMode, setDialogMode] = useState<'create' | 'edit' | 'view'>('create');
   
   const { toast } = useToast();
-  const navigate = useNavigate();
   const { user } = useAuth();
 
   useEffect(() => {
@@ -104,21 +101,6 @@ export default function Unidades() {
     fetchUnits(); // Refresh the data
   }
 
-  function getStatusBadge(status: string) {
-    switch (status) {
-      case 'available':
-        return <Badge className="bg-green-500 hover:bg-green-600">Disponível</Badge>;
-      case 'occupied':
-        return <Badge className="bg-blue-500 hover:bg-blue-600">Ocupada</Badge>;
-      case 'maintenance':
-        return <Badge className="bg-orange-500 hover:bg-orange-600">Manutenção</Badge>;
-      case 'inactive':
-        return <Badge className="bg-gray-500 hover:bg-gray-600">Inativa</Badge>;
-      default:
-        return <Badge>{status}</Badge>;
-    }
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -142,74 +124,13 @@ export default function Unidades() {
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-700"></div>
             </div>
           ) : units.length > 0 ? (
-            <div className="overflow-x-auto">
-              <Table className="border-collapse border border-gray-200">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[180px]">Número da Unidade</TableHead>
-                    <TableHead>Endereço</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {units.map((unit) => (
-                    <TableRow key={unit.id}>
-                      <TableCell className="font-medium">{unit.unit_number}</TableCell>
-                      <TableCell>
-                        {unit.address ? (
-                          <>
-                            {unit.address.name || `${unit.address.street}, ${unit.address.number}`}
-                            <div className="text-xs text-gray-500">
-                              {unit.address.city}
-                            </div>
-                          </>
-                        ) : (
-                          <span className="text-gray-400">Sem endereço</span>
-                        )}
-                      </TableCell>
-                      <TableCell>{getStatusBadge(unit.status)}</TableCell>
-                      <TableCell className="text-right space-x-1">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="inline-flex items-center gap-1"
-                          onClick={() => handleViewUnit(unit)}
-                        >
-                          <Eye size={14} />
-                          Ver
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="inline-flex items-center gap-1"
-                          onClick={() => handleEditUnit(unit)}
-                        >
-                          <Pencil size={14} />
-                          Editar
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <UnitList 
+              units={units}
+              onViewUnit={handleViewUnit}
+              onEditUnit={handleEditUnit}
+            />
           ) : (
-            <div className="text-center py-10">
-              <div className="bg-gray-100 p-3 inline-flex items-center justify-center rounded-full mb-4">
-                <Building size={24} className="text-gray-500" />
-              </div>
-              <h3 className="text-lg font-semibold">Nenhuma unidade encontrada</h3>
-              <p className="text-gray-500 max-w-md mx-auto mt-1 mb-4">
-                Você ainda não possui unidades cadastradas. Adicione sua primeira unidade para começar.
-              </p>
-              <Button 
-                className="bg-green-700 hover:bg-green-800"
-                onClick={handleAddUnit}
-              >
-                Adicionar Unidade
-              </Button>
-            </div>
+            <UnitEmptyState onAddUnit={handleAddUnit} />
           )}
         </CardContent>
       </Card>

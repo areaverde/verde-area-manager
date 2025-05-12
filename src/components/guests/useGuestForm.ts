@@ -49,8 +49,13 @@ export function useGuestForm({ guest, userId, mode, onSuccess }: UseGuestFormPro
       setLoading(true);
       
       if (mode === 'create') {
+        // Make sure to include all required fields explicitly from the form data
         const guestData = {
-          ...formData, // This ensures all required fields are included
+          full_name: formData.full_name,
+          phone: formData.phone,
+          email: formData.email,
+          document_id: formData.document_id,
+          notes: formData.notes,
           created_by: userId,
           updated_by: userId,
           updated_at: new Date().toISOString(),
@@ -63,7 +68,7 @@ export function useGuestForm({ guest, userId, mode, onSuccess }: UseGuestFormPro
           
         if (error) throw error;
       } else if (mode === 'edit' && guest) {
-        // For edit, make sure to include all the required fields from the schema
+        // For edit, make sure to include all required fields explicitly
         const updateData = {
           full_name: formData.full_name,
           phone: formData.phone,

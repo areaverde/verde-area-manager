@@ -3,13 +3,14 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { Plus, Users, Pencil, Eye } from "lucide-react";
+import { Plus } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import GuestForm from "@/components/guests/GuestForm";
 import GuestDetails from "@/components/guests/GuestDetails";
 import { useAuth } from "@/context/AuthContext";
+import GuestList from "@/components/guests/GuestList";
+import GuestEmptyState from "@/components/guests/GuestEmptyState";
 
 type Guest = {
   id: string;
@@ -106,63 +107,13 @@ export default function Hospedes() {
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-700"></div>
             </div>
           ) : guests.length > 0 ? (
-            <div className="overflow-x-auto">
-              <Table className="border-collapse border border-gray-200">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome Completo</TableHead>
-                    <TableHead>Telefone</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {guests.map((guest) => (
-                    <TableRow key={guest.id}>
-                      <TableCell className="font-medium">{guest.full_name}</TableCell>
-                      <TableCell>{guest.phone}</TableCell>
-                      <TableCell>{guest.email}</TableCell>
-                      <TableCell className="text-right space-x-1">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="inline-flex items-center gap-1"
-                          onClick={() => handleViewGuest(guest)}
-                        >
-                          <Eye size={14} />
-                          Ver
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="inline-flex items-center gap-1"
-                          onClick={() => handleEditGuest(guest)}
-                        >
-                          <Pencil size={14} />
-                          Editar
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <GuestList 
+              guests={guests} 
+              onViewGuest={handleViewGuest} 
+              onEditGuest={handleEditGuest} 
+            />
           ) : (
-            <div className="text-center py-10">
-              <div className="bg-gray-100 p-3 inline-flex items-center justify-center rounded-full mb-4">
-                <Users size={24} className="text-gray-500" />
-              </div>
-              <h3 className="text-lg font-semibold">Nenhum hóspede encontrado</h3>
-              <p className="text-gray-500 max-w-md mx-auto mt-1 mb-4">
-                Você ainda não possui hóspedes cadastrados. Adicione seu primeiro hóspede para começar.
-              </p>
-              <Button 
-                className="bg-green-700 hover:bg-green-800"
-                onClick={handleAddGuest}
-              >
-                Adicionar Hóspede
-              </Button>
-            </div>
+            <GuestEmptyState onAddGuest={handleAddGuest} />
           )}
         </CardContent>
       </Card>
