@@ -49,7 +49,7 @@ export function useGuestForm({ guest, userId, mode, onSuccess }: UseGuestFormPro
       setLoading(true);
       
       if (mode === 'create') {
-        // Make sure to include all required fields explicitly from the form data
+        // Make sure all required fields are explicitly included from formData
         const guestData = {
           full_name: formData.full_name,
           phone: formData.phone,
@@ -63,8 +63,7 @@ export function useGuestForm({ guest, userId, mode, onSuccess }: UseGuestFormPro
         
         const { error } = await supabase
           .from('guests')
-          .insert(guestData)
-          .select();
+          .insert(guestData);
           
         if (error) throw error;
       } else if (mode === 'edit' && guest) {
@@ -82,8 +81,7 @@ export function useGuestForm({ guest, userId, mode, onSuccess }: UseGuestFormPro
         const { error } = await supabase
           .from('guests')
           .update(updateData)
-          .eq('id', guest.id)
-          .select();
+          .eq('id', guest.id);
           
         if (error) throw error;
       }
