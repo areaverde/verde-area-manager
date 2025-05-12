@@ -83,8 +83,7 @@ export default function GuestForm({ guest, userId, mode, onSuccess }: GuestFormP
           
         if (error) throw error;
       } else if (mode === 'edit' && guest) {
-        // For edit, don't include created_by to avoid overriding it
-        // Make sure to include all required fields from formData
+        // For edit, make sure to include all the required fields from the schema
         const updateData = {
           full_name: formData.full_name,
           phone: formData.phone,
