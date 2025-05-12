@@ -54,7 +54,7 @@ export default function GuestForm({ guest, userId, mode, onSuccess }: GuestFormP
     },
   });
 
-  async function onSubmit(data: z.infer<typeof guestSchema>) {
+  async function onSubmit(formData: z.infer<typeof guestSchema>) {
     if (!userId) {
       toast({
         title: "Erro de autenticação",
@@ -67,33 +67,37 @@ export default function GuestForm({ guest, userId, mode, onSuccess }: GuestFormP
     try {
       setLoading(true);
       
-      // Create a properly typed object with all required fields
-      const guestData = {
-        ...data,  // This spreads all form data (which contains all required fields)
-        created_by: userId,
-        updated_by: userId,
-        updated_at: new Date().toISOString(),
-      };
-      
-      let response;
-      
       if (mode === 'create') {
-        response = await supabase
+        // For create, include all required fields plus metadata
+        const guestData = {
+          ...formData, // This ensures all required fields are included
+          created_by: userId,
+          updated_by: userId,
+          updated_at: new Date().toISOString(),
+        };
+        
+        const { error } = await supabase
           .from('guests')
           .insert(guestData)
           .select();
+          
+        if (error) throw error;
       } else if (mode === 'edit' && guest) {
-        // For edit, we don't want to override the created_by
-        const { created_by, ...updateData } = guestData;
+        // For edit, don't include created_by to avoid overriding it
+        const updateData = {
+          ...formData,
+          updated_by: userId,
+          updated_at: new Date().toISOString(),
+        };
         
-        response = await supabase
+        const { error } = await supabase
           .from('guests')
           .update(updateData)
           .eq('id', guest.id)
           .select();
+          
+        if (error) throw error;
       }
-      
-      if (response?.error) throw response.error;
       
       toast({
         title: mode === 'create' ? "Hóspede criado" : "Hóspede atualizado",
