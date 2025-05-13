@@ -1,5 +1,8 @@
 
 import { supabase } from "@/lib/supabase";
+import { Tables, TablesInsert } from "@/lib/supabase";
+
+type TableName = keyof Tables;
 
 /**
  * Utility for handling common database operations
@@ -9,7 +12,7 @@ export const submitToDatabase = {
    * Create a new record in a specified table
    */
   create: async <T extends Record<string, any>>(
-    table: string, 
+    table: TableName, 
     data: T, 
     userId: string
   ) => {
@@ -22,7 +25,7 @@ export const submitToDatabase = {
     
     const { error } = await supabase
       .from(table)
-      .insert(recordData);
+      .insert(recordData as any);
       
     if (error) throw error;
   },
@@ -31,7 +34,7 @@ export const submitToDatabase = {
    * Update an existing record in a specified table
    */
   update: async <T extends Record<string, any>>(
-    table: string, 
+    table: TableName, 
     id: string, 
     data: T, 
     userId: string
@@ -44,7 +47,7 @@ export const submitToDatabase = {
     
     const { error } = await supabase
       .from(table)
-      .update(updateData)
+      .update(updateData as any)
       .eq('id', id);
       
     if (error) throw error;
