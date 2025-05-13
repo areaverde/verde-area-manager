@@ -38,8 +38,12 @@ export function Sidebar({ className }: SidebarProps) {
       {/* Header with logo and toggle */}
       <div className="p-4 flex items-center justify-between border-b border-gray-200">
         {!isCollapsed && (
-          <div className="font-semibold text-green-700 text-sm">
-            Gestão Hospedaria<br />Area Verde
+          <div className="flex flex-col items-center">
+            <img 
+              src="/lovable-uploads/476f7c09-2ade-4275-afa3-8844fb425dc4.png" 
+              alt="Area Verde Suites Logo" 
+              className="h-12 object-contain"
+            />
           </div>
         )}
         <Button

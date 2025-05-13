@@ -52,7 +52,14 @@ export function MainLayout({ children }: MainLayoutProps) {
             >
               <Menu size={24} />
             </Button>
-            <h1 className="font-semibold text-green-700">Gestão Hospedaria Area Verde</h1>
+            <div className="flex items-center">
+              <img 
+                src="/lovable-uploads/476f7c09-2ade-4275-afa3-8844fb425dc4.png" 
+                alt="Area Verde Suites Logo" 
+                className="h-8 object-contain mr-2"
+              />
+              <span className="font-semibold text-green-700">Gestão Hospedaria</span>
+            </div>
           </header>
         )}
 
