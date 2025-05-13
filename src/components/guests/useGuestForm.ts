@@ -1,10 +1,9 @@
 
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/lib/supabase";
 import { guestSchema, type GuestFormValues } from "./GuestSchema";
+import { useFormSubmission } from "@/hooks/useFormSubmission";
+import { guestOperations } from "./guestOperations";
 
 interface UseGuestFormProps {
   guest?: {
@@ -21,9 +20,6 @@ interface UseGuestFormProps {
 }
 
 export function useGuestForm({ guest, userId, mode, onSuccess }: UseGuestFormProps) {
-  const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
-
   const form = useForm<GuestFormValues>({
     resolver: zodResolver(guestSchema),
     defaultValues: {
@@ -35,74 +31,24 @@ export function useGuestForm({ guest, userId, mode, onSuccess }: UseGuestFormPro
     },
   });
 
-  async function onSubmit(formData: GuestFormValues) {
-    if (!userId) {
-      toast({
-        title: "Erro de autenticação",
-        description: "Você precisa estar logado para realizar esta ação.",
-        variant: "destructive",
-      });
-      return;
-    }
+  const { loading, handleSubmit } = useFormSubmission({
+    successTitle: mode === 'create' ? "Hóspede criado" : "Hóspede atualizado",
+    successDescription: mode === 'create' 
+      ? "O hóspede foi criado com sucesso." 
+      : "As informações do hóspede foram atualizadas.",
+    errorTitle: "Erro ao salvar hóspede",
+    errorDescription: "Ocorreu um problema ao salvar as informações do hóspede.",
+    onSuccess,
+  });
 
-    try {
-      setLoading(true);
-      
-      if (mode === 'create') {
-        // Make sure all required fields are explicitly included from formData
-        const guestData = {
-          full_name: formData.full_name,
-          phone: formData.phone,
-          email: formData.email,
-          document_id: formData.document_id,
-          notes: formData.notes,
-          created_by: userId,
-          updated_by: userId,
-          updated_at: new Date().toISOString(),
-        };
-        
-        const { error } = await supabase
-          .from('guests')
-          .insert(guestData);
-          
-        if (error) throw error;
-      } else if (mode === 'edit' && guest) {
-        // For edit, make sure to include all required fields explicitly
-        const updateData = {
-          full_name: formData.full_name,
-          phone: formData.phone,
-          email: formData.email,
-          document_id: formData.document_id,
-          notes: formData.notes,
-          updated_by: userId,
-          updated_at: new Date().toISOString(),
-        };
-        
-        const { error } = await supabase
-          .from('guests')
-          .update(updateData)
-          .eq('id', guest.id);
-          
-        if (error) throw error;
-      }
-      
-      toast({
-        title: mode === 'create' ? "Hóspede criado" : "Hóspede atualizado",
-        description: mode === 'create' 
-          ? "O hóspede foi criado com sucesso." 
-          : "As informações do hóspede foram atualizadas.",
-      });
-      
-      onSuccess();
-    } catch (error) {
-      console.error('Error saving guest:', error);
-      toast({
-        title: "Erro ao salvar hóspede",
-        description: "Ocorreu um problema ao salvar as informações do hóspede.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+  async function onSubmit(formData: GuestFormValues) {
+    if (mode === 'create') {
+      await handleSubmit(() => guestOperations.create(userId, formData), formData);
+    } else if (mode === 'edit' && guest) {
+      await handleSubmit(
+        () => guestOperations.update(guest.id, userId, formData),
+        formData
+      );
     }
   }
 

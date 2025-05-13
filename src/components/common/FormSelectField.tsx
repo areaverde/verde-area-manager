@@ -45,6 +45,12 @@ export function FormSelectField({
   onValueChange,
   className,
 }: FormSelectFieldProps) {
+  // Validate options to ensure no empty string values
+  const validOptions = options.map(option => ({
+    value: option.value || "default", // Ensure no empty strings
+    label: option.label
+  }));
+
   return (
     <FormField
       control={form.control}
@@ -61,7 +67,7 @@ export function FormSelectField({
               field.onChange(value);
               if (onValueChange) onValueChange(value);
             }}
-            value={String(field.value) || "default"}
+            value={field.value ? String(field.value) : "default"}
           >
             <FormControl>
               <SelectTrigger>
@@ -69,7 +75,7 @@ export function FormSelectField({
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              {options.map((option) => (
+              {validOptions.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
                 </SelectItem>
