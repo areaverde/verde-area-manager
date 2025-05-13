@@ -61,7 +61,7 @@ export function FormSelectField({
               field.onChange(value);
               if (onValueChange) onValueChange(value);
             }}
-            value={String(field.value) || ""}
+            value={String(field.value) || "default"}
           >
             <FormControl>
               <SelectTrigger>

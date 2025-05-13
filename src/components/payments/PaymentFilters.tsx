@@ -128,7 +128,7 @@ export function PaymentFilters({ onFilterChange }: PaymentFiltersProps) {
               <SelectValue placeholder="Todas" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas</SelectItem>
+              <SelectItem value="all">Todas</SelectItem>
               {units.map((unit) => (
                 <SelectItem key={unit.id} value={unit.id}>
                   {unit.unit_number}
@@ -149,7 +149,7 @@ export function PaymentFilters({ onFilterChange }: PaymentFiltersProps) {
               <SelectValue placeholder="Todos" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos</SelectItem>
+              <SelectItem value="all">Todos</SelectItem>
               {guests.map((guest) => (
                 <SelectItem key={guest.id} value={guest.id}>
                   {guest.full_name}
@@ -170,7 +170,7 @@ export function PaymentFilters({ onFilterChange }: PaymentFiltersProps) {
               <SelectValue placeholder="Todos" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos</SelectItem>
+              <SelectItem value="all">Todos</SelectItem>
               {months.map((month) => (
                 <SelectItem key={month.value} value={month.value.toString()}>
                   {month.label}
@@ -191,7 +191,7 @@ export function PaymentFilters({ onFilterChange }: PaymentFiltersProps) {
               <SelectValue placeholder="Todos" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos</SelectItem>
+              <SelectItem value="all">Todos</SelectItem>
               {yearOptions.map((year) => (
                 <SelectItem key={year} value={year.toString()}>
                   {year}
@@ -212,7 +212,7 @@ export function PaymentFilters({ onFilterChange }: PaymentFiltersProps) {
               <SelectValue placeholder="Todos" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos</SelectItem>
+              <SelectItem value="all">Todos</SelectItem>
               {statusOptions.map((status) => (
                 <SelectItem key={status.value} value={status.value}>
                   {status.label}
