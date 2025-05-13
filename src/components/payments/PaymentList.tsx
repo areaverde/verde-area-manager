@@ -8,10 +8,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { formatDate, formatCurrency, formatMonthYear } from "@/utils/formatters";
+import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import { EmptyState } from "@/components/common/EmptyState";
+import { PaymentRow } from "./PaymentRow";
 
 interface PaymentListProps {
   onEdit: (payment: Payment) => void;
@@ -44,18 +45,6 @@ interface Payment {
     };
   };
 }
-
-const statusMap: Record<string, { text: string, className: string }> = {
-  paid: { text: "Pago", className: "bg-green-100 text-green-700 border-green-200" },
-  pending: { text: "Pendente", className: "bg-blue-100 text-blue-700 border-blue-200" },
-  overdue: { text: "Em Atraso", className: "bg-red-100 text-red-700 border-red-200" },
-  cancelled: { text: "Cancelado", className: "bg-gray-100 text-gray-700 border-gray-200" },
-};
-
-const months = [
-  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
-];
 
 export function PaymentList({ onEdit, filters }: PaymentListProps) {
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -145,37 +134,16 @@ export function PaymentList({ onEdit, filters }: PaymentListProps) {
     fetchPayments();
   }, [filters]);
 
-  const formatDate = (dateString: string) => {
-    return format(new Date(dateString), "dd/MM/yyyy", { locale: ptBR });
-  };
-
-  const formatCurrency = (value: number) => {
-    return value.toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    });
-  };
-
-  const formatMonthYear = (month: number, year: number) => {
-    return `${months[month - 1]}/${year}`;
-  };
-
   if (loading) {
-    return (
-      <div className="flex justify-center items-center py-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-700"></div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   if (payments.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow p-6 text-center">
-        <h3 className="text-lg font-medium">Nenhum pagamento encontrado</h3>
-        <p className="text-gray-500 mt-2">
-          {filters ? "Tente outros filtros ou" : ""} registre um novo pagamento.
-        </p>
-      </div>
+      <EmptyState 
+        title="Nenhum pagamento encontrado"
+        description={filters ? "Tente outros filtros ou registre um novo pagamento." : "Registre um novo pagamento."}
+      />
     );
   }
 
@@ -195,27 +163,14 @@ export function PaymentList({ onEdit, filters }: PaymentListProps) {
         </TableHeader>
         <TableBody>
           {payments.map((payment) => (
-            <TableRow key={payment.id}>
-              <TableCell>{payment.stays?.units?.unit_number || "—"}</TableCell>
-              <TableCell>{payment.stays?.guests?.full_name || "—"}</TableCell>
-              <TableCell>{formatMonthYear(payment.reference_month, payment.reference_year)}</TableCell>
-              <TableCell>{formatCurrency(payment.amount_paid)}</TableCell>
-              <TableCell>{formatDate(payment.payment_date)}</TableCell>
-              <TableCell>
-                <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${statusMap[payment.status]?.className || ""}`}>
-                  {statusMap[payment.status]?.text || payment.status}
-                </span>
-              </TableCell>
-              <TableCell>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onEdit(payment)}
-                >
-                  Detalhes
-                </Button>
-              </TableCell>
-            </TableRow>
+            <PaymentRow
+              key={payment.id}
+              payment={payment}
+              formatDate={formatDate}
+              formatCurrency={formatCurrency}
+              formatMonthYear={formatMonthYear}
+              onEdit={onEdit}
+            />
           ))}
         </TableBody>
       </Table>
