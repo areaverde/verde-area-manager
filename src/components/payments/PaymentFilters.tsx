@@ -101,7 +101,7 @@ export function PaymentFilters({ onFilterChange }: PaymentFiltersProps) {
     } else if (key === "month" || key === "year") {
       updatedFilters[key] = typeof value === "string" ? parseInt(value) : value;
     } else {
-      updatedFilters[key] = value;
+      updatedFilters[key] = value.toString();
     }
     
     setFilters(updatedFilters);

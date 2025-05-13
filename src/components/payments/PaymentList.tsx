@@ -33,7 +33,7 @@ interface Payment {
   amount_paid: number;
   reference_month: number;
   reference_year: number;
-  status: string;
+  status: "paid" | "pending" | "overdue" | "cancelled";
   notes: string | null;
   stays: {
     units: {
@@ -127,7 +127,7 @@ export function PaymentList({ onEdit, filters }: PaymentListProps) {
       }
       
       if (filters?.status) {
-        query = query.eq("status", filters.status);
+        query = query.eq("status", filters.status as "paid" | "pending" | "overdue" | "cancelled");
       }
 
       const { data, error } = await query;
